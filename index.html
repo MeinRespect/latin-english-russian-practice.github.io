@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Latin Trainer</title>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #111;
+    color: white;
+    margin: 0;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    max-width: 700px;
+    width: 100%;
+}
+
+h1 {
+    text-align: center;
+}
+
+textarea {
+    width: 100%;
+    height: 200px;
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+button {
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+.primary {
+    background: #4CAF50;
+    color: white;
+}
+
+.secondary {
+    background: #444;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.word-box {
+    font-size: 32px;
+    margin: 40px 0;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    transition: 0.2s;
+}
+
+.correct {
+    border: 2px solid #4CAF50;
+    background-color: #1b2e1b;
+}
+
+.wrong {
+    border: 2px solid #ff4d4d;
+    background-color: #2a1a1a;
+}
+
+.feedback {
+    margin-top: 20px;
+    min-height: 60px;
+    font-size: 18px;
+}
+
+.feedback.correct-text {
+    color: #4CAF50;
+}
+
+.feedback.wrong-text {
+    color: #ff4d4d;
+}
+
+.hidden {
+    display: none;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div id="setup">
+    <h1>Latin Word Trainer</h1>
+    <textarea id="wordInput" placeholder="Вставь слова в формате:
+lŏcūtĭo - locution, речевой оборот"></textarea>
+    <button class="primary" onclick="startTraining()">Начать обучение</button>
+</div>
+
+<div id="trainer" class="hidden">
+    <div class="word-box" id="latinWord"></div>
+
+    <input type="text" id="answerInput" placeholder="Введите перевод на английском">
+
+    <div style="margin-top:15px;">
+        <button class="secondary" onclick="dontKnow()">Не знаю</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+</div>
+
+</div>
+
+<script>
+let words = [];
+let currentIndex = 0;
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function parseWords(text) {
+    const lines = text.split("\n").filter(line => line.trim() !== "");
+    return lines.map(line => {
+        const parts = line.split(" - ");
+        if (parts.length < 2) return null;
+
+        const latin = parts[0].trim();
+        const rest = parts[1].split(",");
+        const english = rest[0].trim();
+        const russian = rest[1] ? rest[1].trim() : "";
+
+        return { latin, english, russian };
+    }).filter(Boolean);
+}
+
+function startTraining() {
+    const text = document.getElementById("wordInput").value;
+    words = parseWords(text);
+
+    if (words.length === 0) {
+        alert("Нет корректных слов.");
+        return;
+    }
+
+    shuffle(words);
+    currentIndex = 0;
+
+    document.getElementById("setup").classList.add("hidden");
+    document.getElementById("trainer").classList.remove("hidden");
+
+    showWord();
+}
+
+function showWord() {
+    const input = document.getElementById("answerInput");
+    input.classList.remove("correct", "wrong");
+    input.value = "";
+    input.focus();
+
+    document.getElementById("latinWord").textContent = words[currentIndex].latin;
+}
+
+function nextWord() {
+    currentIndex++;
+    if (currentIndex >= words.length) {
+        shuffle(words);
+        currentIndex = 0;
+    }
+    showWord();
+}
+
+document.getElementById("answerInput").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+        checkAnswer();
+    }
+});
+
+function checkAnswer() {
+    const input = document.getElementById("answerInput");
+    const userAnswer = input.value.trim();
+    const correct = words[currentIndex];
+    const feedback = document.getElementById("feedback");
+
+    feedback.classList.remove("correct-text", "wrong-text");
+
+    if (userAnswer === correct.english) {
+        input.classList.add("correct");
+        feedback.classList.add("correct-text");
+
+        feedback.innerHTML = 
+            "Правильно перевод на русский: " + correct.russian +
+            "<br><br>Следующее слово: " + words[(currentIndex + 1) % words.length].latin;
+    } else {
+        input.classList.add("wrong");
+        feedback.classList.add("wrong-text");
+
+        feedback.innerHTML =
+            "Неправильно. Правильный перевод: " +
+            correct.russian + " (" + correct.english + ")" +
+            "<br><br>Следующее слово: " + words[(currentIndex + 1) % words.length].latin;
+    }
+
+    delayNext();
+}
+
+function dontKnow() {
+    const input = document.getElementById("answerInput");
+    const correct = words[currentIndex];
+    const feedback = document.getElementById("feedback");
+
+    input.classList.add("wrong");
+    feedback.classList.remove("correct-text");
+    feedback.classList.add("wrong-text");
+
+    feedback.innerHTML =
+        "Правильный перевод: " +
+        correct.russian + " (" + correct.english + ")" +
+        "<br><br>Следующее слово: " + words[(currentIndex + 1) % words.length].latin;
+
+    delayNext();
+}
+
+function delayNext() {
+    setTimeout(() => {
+        document.getElementById("feedback").innerHTML = "";
+        nextWord();
+    }, 2000);
+}
+</script>
+
+</body>
+</html>
