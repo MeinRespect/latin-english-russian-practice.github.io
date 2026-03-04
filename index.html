@@ -21,13 +21,11 @@ body {
     width: 100%;
 }
 
-h1 {
-    text-align: center;
-}
+h1 { text-align: center; }
 
 textarea {
     width: 100%;
-    height: 200px;
+    height: 220px;
     padding: 15px;
     border-radius: 10px;
     border: none;
@@ -44,19 +42,8 @@ button {
     margin-right: 10px;
 }
 
-.primary {
-    background: #4CAF50;
-    color: white;
-}
-
-.secondary {
-    background: #444;
-    color: white;
-}
-
-button:hover {
-    opacity: 0.9;
-}
+.primary { background: #4CAF50; color: white; }
+.secondary { background: #444; color: white; }
 
 .word-box {
     font-size: 32px;
@@ -89,17 +76,10 @@ input {
     font-size: 18px;
 }
 
-.feedback.correct-text {
-    color: #4CAF50;
-}
+.feedback.correct-text { color: #4CAF50; }
+.feedback.wrong-text { color: #ff4d4d; }
 
-.feedback.wrong-text {
-    color: #ff4d4d;
-}
-
-.hidden {
-    display: none;
-}
+.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -108,8 +88,9 @@ input {
 
 <div id="setup">
     <h1>Latin Word Trainer</h1>
-    <textarea id="wordInput" placeholder="Вставь слова в формате:
-lŏcūtĭo - locution, речевой оборот"></textarea>
+    <textarea id="wordInput" placeholder="Формат:
+lŏcūtĭo - locution, речевой оборот
+corpŏrĕus - corporeal, телесный"></textarea>
     <button class="primary" onclick="startTraining()">Начать обучение</button>
 </div>
 
@@ -139,18 +120,33 @@ function shuffle(array) {
 }
 
 function parseWords(text) {
-    const lines = text.split("\n").filter(line => line.trim() !== "");
-    return lines.map(line => {
-        const parts = line.split(" - ");
-        if (parts.length < 2) return null;
+    const lines = text.split("\n");
+    const result = [];
 
-        const latin = parts[0].trim();
-        const rest = parts[1].split(",");
-        const english = rest[0].trim();
-        const russian = rest[1] ? rest[1].trim() : "";
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
 
-        return { latin, english, russian };
-    }).filter(Boolean);
+        // Проверяем наличие " - "
+        const dashIndex = line.indexOf(" - ");
+        if (dashIndex === -1) continue;
+
+        const latin = line.substring(0, dashIndex).trim();
+        const translationPart = line.substring(dashIndex + 3).trim();
+
+        // Берём первую запятую как разделитель
+        const commaIndex = translationPart.indexOf(",");
+        if (commaIndex === -1) continue;
+
+        const english = translationPart.substring(0, commaIndex).trim();
+        const russian = translationPart.substring(commaIndex + 1).trim();
+
+        if (latin && english && russian) {
+            result.push({ latin, english, russian });
+        }
+    }
+
+    return result;
 }
 
 function startTraining() {
@@ -158,7 +154,7 @@ function startTraining() {
     words = parseWords(text);
 
     if (words.length === 0) {
-        alert("Нет корректных слов.");
+        alert("Формат неверный. Используй: латынь - английский, русский");
         return;
     }
 
@@ -190,9 +186,7 @@ function nextWord() {
 }
 
 document.getElementById("answerInput").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-        checkAnswer();
-    }
+    if (e.key === "Enter") checkAnswer();
 });
 
 function checkAnswer() {
@@ -207,9 +201,10 @@ function checkAnswer() {
         input.classList.add("correct");
         feedback.classList.add("correct-text");
 
-        feedback.innerHTML = 
+        feedback.innerHTML =
             "Правильно перевод на русский: " + correct.russian +
-            "<br><br>Следующее слово: " + words[(currentIndex + 1) % words.length].latin;
+            "<br><br>Следующее слово: " +
+            words[(currentIndex + 1) % words.length].latin;
     } else {
         input.classList.add("wrong");
         feedback.classList.add("wrong-text");
@@ -217,10 +212,14 @@ function checkAnswer() {
         feedback.innerHTML =
             "Неправильно. Правильный перевод: " +
             correct.russian + " (" + correct.english + ")" +
-            "<br><br>Следующее слово: " + words[(currentIndex + 1) % words.length].latin;
+            "<br><br>Следующее слово: " +
+            words[(currentIndex + 1) % words.length].latin;
     }
 
-    delayNext();
+    setTimeout(() => {
+        feedback.innerHTML = "";
+        nextWord();
+    }, 2000);
 }
 
 function dontKnow() {
@@ -229,20 +228,16 @@ function dontKnow() {
     const feedback = document.getElementById("feedback");
 
     input.classList.add("wrong");
-    feedback.classList.remove("correct-text");
     feedback.classList.add("wrong-text");
 
     feedback.innerHTML =
         "Правильный перевод: " +
         correct.russian + " (" + correct.english + ")" +
-        "<br><br>Следующее слово: " + words[(currentIndex + 1) % words.length].latin;
+        "<br><br>Следующее слово: " +
+        words[(currentIndex + 1) % words.length].latin;
 
-    delayNext();
-}
-
-function delayNext() {
     setTimeout(() => {
-        document.getElementById("feedback").innerHTML = "";
+        feedback.innerHTML = "";
         nextWord();
     }, 2000);
 }
