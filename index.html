@@ -16,11 +16,7 @@ body {
     justify-content: center;
 }
 
-.container {
-    max-width: 700px;
-    width: 100%;
-}
-
+.container { max-width: 700px; width: 100%; }
 h1 { text-align: center; }
 
 textarea {
@@ -90,19 +86,17 @@ input {
     <h1>Latin Word Trainer</h1>
     <textarea id="wordInput" placeholder="Формат:
 lŏcūtĭo - locution, речевой оборот
-corpŏrĕus - corporeal, телесный"></textarea>
+corpŏrĕus – corporeal, телесный
+pars prior — foreground, передний план"></textarea>
     <button class="primary" onclick="startTraining()">Начать обучение</button>
 </div>
 
 <div id="trainer" class="hidden">
     <div class="word-box" id="latinWord"></div>
-
     <input type="text" id="answerInput" placeholder="Введите перевод на английском">
-
     <div style="margin-top:15px;">
         <button class="secondary" onclick="dontKnow()">Не знаю</button>
     </div>
-
     <div class="feedback" id="feedback"></div>
 </div>
 
@@ -127,14 +121,13 @@ function parseWords(text) {
         line = line.trim();
         if (!line) continue;
 
-        // Проверяем наличие " - "
-        const dashIndex = line.indexOf(" - ");
-        if (dashIndex === -1) continue;
+        // Ищем первое тире любого типа: -, –, —
+        const match = line.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+        if (!match) continue;
 
-        const latin = line.substring(0, dashIndex).trim();
-        const translationPart = line.substring(dashIndex + 3).trim();
+        const latin = match[1].trim();
+        const translationPart = match[2].trim();
 
-        // Берём первую запятую как разделитель
         const commaIndex = translationPart.indexOf(",");
         if (commaIndex === -1) continue;
 
@@ -172,7 +165,6 @@ function showWord() {
     input.classList.remove("correct", "wrong");
     input.value = "";
     input.focus();
-
     document.getElementById("latinWord").textContent = words[currentIndex].latin;
 }
 
@@ -200,7 +192,6 @@ function checkAnswer() {
     if (userAnswer === correct.english) {
         input.classList.add("correct");
         feedback.classList.add("correct-text");
-
         feedback.innerHTML =
             "Правильно перевод на русский: " + correct.russian +
             "<br><br>Следующее слово: " +
@@ -208,7 +199,6 @@ function checkAnswer() {
     } else {
         input.classList.add("wrong");
         feedback.classList.add("wrong-text");
-
         feedback.innerHTML =
             "Неправильно. Правильный перевод: " +
             correct.russian + " (" + correct.english + ")" +
