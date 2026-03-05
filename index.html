@@ -88,12 +88,14 @@ input {
 <div class="container">
 
 <div id="setup">
-    <h1>Latin Word Trainer</h1>
-    <textarea id="wordInput" placeholder="Формат:
+<h1>Latin Word Trainer</h1>
+
+<textarea id="wordInput" placeholder="Формат:
 lŏcūtĭo - locution, речевой оборот
 corpŏrĕus – corporeal, телесный
 pars prior — foreground, передний план"></textarea>
-    <button class="primary" onclick="startTraining()">Начать обучение</button>
+
+<button class="primary" onclick="startTraining()">Начать обучение</button>
 </div>
 
 <div id="trainer" class="hidden">
@@ -107,7 +109,7 @@ pars prior — foreground, передний план"></textarea>
 <input type="text" id="answerInput" placeholder="Введите перевод на английском">
 
 <div style="margin-top:15px;">
-    <button class="secondary" onclick="dontKnow()">Не знаю</button>
+<button class="secondary" onclick="dontKnow()">Не знаю</button>
 </div>
 
 <div class="feedback" id="feedback"></div>
@@ -117,6 +119,7 @@ pars prior — foreground, передний план"></textarea>
 </div>
 
 <script>
+
 let words = [];
 let currentIndex = 0;
 
@@ -124,158 +127,175 @@ let startTime;
 let timerInterval;
 
 function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
+for (let i = array.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[array[i], array[j]] = [array[j], array[i]];
+}
 }
 
 function parseWords(text) {
-    const lines = text.split("\n");
-    const result = [];
 
-    for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
+const lines = text.split("\n");
+const result = [];
 
-        const match = line.match(/^(.+?)\s*[-–—]\s*(.+)$/);
-        if (!match) continue;
+for (let line of lines) {
 
-        const latin = match[1].trim();
-        const translationPart = match[2].trim();
+line = line.trim();
+if (!line) continue;
 
-        const commaIndex = translationPart.indexOf(",");
-        if (commaIndex === -1) continue;
+const match = line.match(/^(.+?)\s*[-–—]\s*(.+)$/);
+if (!match) continue;
 
-        const english = translationPart.substring(0, commaIndex).trim();
-        const russian = translationPart.substring(commaIndex + 1).trim();
+const latin = match[1].trim();
+const translationPart = match[2].trim();
 
-        if (latin && english && russian) {
-            result.push({ latin, english, russian });
-        }
-    }
+const commaIndex = translationPart.indexOf(",");
+if (commaIndex === -1) continue;
 
-    return result;
+const english = translationPart.substring(0, commaIndex).trim();
+const russian = translationPart.substring(commaIndex + 1).trim();
+
+if (latin && english && russian) {
+result.push({ latin, english, russian });
+}
+}
+
+return result;
+
 }
 
 function startTraining() {
-    const text = document.getElementById("wordInput").value;
-    words = parseWords(text);
 
-    if (words.length === 0) {
-        alert("Формат неверный. Используй: латынь - английский, русский");
-        return;
-    }
+const text = document.getElementById("wordInput").value;
+words = parseWords(text);
 
-    shuffle(words);
-    currentIndex = 0;
+if (words.length === 0) {
+alert("Формат неверный. Используй: латынь - английский, русский");
+return;
+}
 
-    document.getElementById("setup").classList.add("hidden");
-    document.getElementById("trainer").classList.remove("hidden");
+shuffle(words);
+currentIndex = 0;
 
-    showWord();
-    startTimer();
+document.getElementById("setup").classList.add("hidden");
+document.getElementById("trainer").classList.remove("hidden");
+
+showWord();
+startTimer();
+
 }
 
 function showWord() {
-    const input = document.getElementById("answerInput");
 
-    input.classList.remove("correct", "wrong");
-    input.value = "";
-    input.focus();
+const input = document.getElementById("answerInput");
 
-    document.getElementById("latinWord").textContent = words[currentIndex].latin;
+input.classList.remove("correct","wrong");
+input.value = "";
+input.focus();
+
+document.getElementById("latinWord").textContent = words[currentIndex].latin;
+
 }
 
 function nextWord() {
-    currentIndex++;
 
-    if (currentIndex >= words.length) {
-        shuffle(words);
-        currentIndex = 0;
-    }
+currentIndex++;
 
-    showWord();
+if (currentIndex >= words.length) {
+shuffle(words);
+currentIndex = 0;
+}
+
+showWord();
+
 }
 
 document.getElementById("answerInput").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") checkAnswer();
+
+if (e.key === "Enter") checkAnswer();
+
 });
 
 function checkAnswer() {
-    const input = document.getElementById("answerInput");
-    const userAnswer = input.value.trim();
 
-    const correct = words[currentIndex];
-    const feedback = document.getElementById("feedback");
+const input = document.getElementById("answerInput");
+const userAnswer = input.value.trim();
 
-    feedback.classList.remove("correct-text", "wrong-text");
+const correct = words[currentIndex];
+const feedback = document.getElementById("feedback");
 
-    if (userAnswer === correct.english) {
+feedback.classList.remove("correct-text","wrong-text");
 
-        input.classList.add("correct");
+if (userAnswer === correct.english) {
 
-        feedback.classList.add("correct-text");
-        feedback.innerHTML =
-            "Правильно перевод на русский: " + correct.russian +
-            "<br><br>Следующее слово: " +
-            words[(currentIndex + 1) % words.length].latin;
+input.classList.add("correct");
 
-    } else {
+feedback.classList.add("correct-text");
+feedback.innerHTML =
+"Правильно перевод на русский: " + correct.russian +
+"<br><br>Следующее слово: " +
+words[(currentIndex + 1) % words.length].latin;
 
-        input.classList.add("wrong");
+} else {
 
-        feedback.classList.add("wrong-text");
-        feedback.innerHTML =
-            "Неправильно. Правильный перевод: " +
-            correct.russian + " (" + correct.english + ")" +
-            "<br><br>Следующее слово: " +
-            words[(currentIndex + 1) % words.length].latin;
-    }
+input.classList.add("wrong");
 
-    setTimeout(() => {
-        feedback.innerHTML = "";
-        nextWord();
-    }, 2000);
+feedback.classList.add("wrong-text");
+feedback.innerHTML =
+"Неправильно. Правильный перевод: " +
+correct.russian + " (" + correct.english + ")" +
+"<br><br>Следующее слово: " +
+words[(currentIndex + 1) % words.length].latin;
+
+}
+
+setTimeout(() => {
+feedback.innerHTML = "";
+nextWord();
+},2000);
+
 }
 
 function dontKnow() {
 
-    const input = document.getElementById("answerInput");
-    const correct = words[currentIndex];
-    const feedback = document.getElementById("feedback");
+const input = document.getElementById("answerInput");
+const correct = words[currentIndex];
+const feedback = document.getElementById("feedback");
 
-    input.classList.add("wrong");
+input.classList.add("wrong");
 
-    feedback.classList.add("wrong-text");
+feedback.classList.remove("correct-text");
+feedback.classList.add("wrong-text");
 
-    feedback.innerHTML =
-        "Правильный перевод: " +
-        correct.russian + " (" + correct.english + ")" +
-        "<br><br>Следующее слово: " +
-        words[(currentIndex + 1) % words.length].latin;
+feedback.innerHTML =
+"Правильный перевод: " +
+correct.russian + " (" + correct.english + ")" +
+"<br><br>Попробуйте ещё раз";
 
-    setTimeout(() => {
-        feedback.innerHTML = "";
-        nextWord();
-    }, 2000);
+setTimeout(() => {
+feedback.innerHTML = "";
+showWord(); // показываем то же слово снова
+},2000);
+
 }
 
 function startTimer() {
 
-    startTime = Date.now();
+startTime = Date.now();
 
-    timerInterval = setInterval(() => {
+timerInterval = setInterval(() => {
 
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+const elapsed = Math.floor((Date.now() - startTime) / 1000);
 
-        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-        const seconds = (elapsed % 60).toString().padStart(2, '0');
+const minutes = Math.floor(elapsed / 60).toString().padStart(2,'0');
+const seconds = (elapsed % 60).toString().padStart(2,'0');
 
-        document.getElementById("time").textContent = minutes + ":" + seconds;
+document.getElementById("time").textContent = minutes + ":" + seconds;
 
-    }, 1000);
+},1000);
+
 }
+
 </script>
 
 </body>
